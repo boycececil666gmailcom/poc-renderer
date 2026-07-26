@@ -1,0 +1,8 @@
+glfw
+PyOpenGL
+numpy
+pyglm
+trimesh
+scipy
+python-dotenv
+Pillow
