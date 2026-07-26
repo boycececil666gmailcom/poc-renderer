@@ -14,6 +14,10 @@ class Shader:
         loc = glGetUniformLocation(self.program_id, name)
         glUniformMatrix4fv(loc, 1, GL_FALSE, glm.value_ptr(matrix))
         
+    def set_vec3(self, name, vector):
+        loc = glGetUniformLocation(self.program_id, name)
+        glUniform3fv(loc, 1, glm.value_ptr(vector))
+        
     def delete(self):
         glDeleteProgram(self.program_id)
         

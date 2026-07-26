@@ -23,4 +23,4 @@ echo -e "\n${CYAN}========================================================${NC}"
 echo -e "${GREEN}>>> [2/2] [$(basename "$0")] Launching OpenGL Engine with Toyota Supra${NC}"
 echo -e "${CYAN}========================================================${NC}\n"
 
-python main.py toyota_supra.glb
+./venv/Scripts/python main.py toyota_supra.glb

@@ -6,7 +6,7 @@ import glm
 
 from engine.material import Material
 
-class SubMesh:
+class MeshPrimitive:
     def __init__(self, mesh_obj):
         # 1. Extract vertices and normal arrays
         vertices = mesh_obj.vertices[mesh_obj.faces].astype('float32').reshape(-1)
@@ -78,46 +78,32 @@ class SubMesh:
         self.material.delete()
 
 class Mesh:
-    def __init__(self, model_path=None):
-        # 1. Load model or generate fallback torus
-        if model_path:
-            print(f"Loading model: {model_path}")
-            scene_or_mesh = trimesh.load(model_path)
-        else:
-            print("No model path provided. Loading default test_cube.glb...")
-            scene_or_mesh = trimesh.load("test_cube.glb")
+    def __init__(self, model_path):
+        # 1. Load model
+        print(f"Loading model: {model_path}")
+        scene_or_mesh = trimesh.load(model_path)
             
-        # 2. Iterate geometries and nodes to apply transformations
-        self.submeshes = []
+        # 2. Compute bounding limits and compile primitives from glTF scene
+        scene = scene_or_mesh
+        self.center = scene.centroid
+        size = scene.extents
+        max_dim = max(size)
+        self.scale_factor = 1.5 / max_dim if max_dim > 0 else 1.0
         
-        if isinstance(scene_or_mesh, trimesh.Scene):
-            # Compute bounding limits of the entire scene combined
-            self.center = scene_or_mesh.centroid
-            size = scene_or_mesh.extents
-            max_dim = max(size)
-            self.scale_factor = 1.5 / max_dim if max_dim > 0 else 1.0
-            
-            # Compile submeshes with scene node transforms applied
-            for node_name in scene_or_mesh.graph.nodes_geometry:
-                transform, geometry_name = scene_or_mesh.graph[node_name]
-                # Copy the base geometry mesh
-                geom = scene_or_mesh.geometry[geometry_name].copy()
-                # Apply transformation matrix to vertices and normals
-                geom.apply_transform(transform)
-                # Create submesh
-                self.submeshes.append(SubMesh(geom))
-        else:
-            # Single mesh fallback
-            self.center = scene_or_mesh.centroid
-            size = scene_or_mesh.extents
-            max_dim = max(size)
-            self.scale_factor = 1.5 / max_dim if max_dim > 0 else 1.0
-            self.submeshes.append(SubMesh(scene_or_mesh))
+        # Compile primitives with scene node transforms applied
+        self.primitives = []
+        for node_name in scene.graph.nodes_geometry:
+            transform, geometry_name = scene.graph[node_name]
+            # Copy base geometry mesh and apply transform matrix
+            geom = scene.geometry[geometry_name].copy()
+            geom.apply_transform(transform)
+            # Create mesh primitive
+            self.primitives.append(MeshPrimitive(geom))
             
     def draw(self, shader):
-        for submesh in self.submeshes:
-            submesh.draw(shader)
+        for primitive in self.primitives:
+            primitive.draw(shader)
             
     def delete(self):
-        for submesh in self.submeshes:
-            submesh.delete()
+        for primitive in self.primitives:
+            primitive.delete()
