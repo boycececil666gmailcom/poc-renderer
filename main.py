@@ -60,7 +60,7 @@ def main():
         shader.set_mat4("projection", projection)
         
         # Draw model
-        mesh.draw()
+        mesh.draw(shader)
         
         # Double buffer swap and OS window event handling
         window.swap_buffers()

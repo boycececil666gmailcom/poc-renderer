@@ -9,25 +9,24 @@ class Material:
         self.texture_id = 0
         
         if trimesh_material is not None:
-            # 1. Base color factor
-            if hasattr(trimesh_material, "baseColorFactor"):
+            # 1. Base color factor (using main_color which abstracts PBR and Simple materials)
+            if hasattr(trimesh_material, "main_color") and trimesh_material.main_color is not None:
+                color = trimesh_material.main_color
+                self.base_color = glm.vec4(
+                    float(color[0]) / 255.0,
+                    float(color[1]) / 255.0,
+                    float(color[2]) / 255.0,
+                    float(color[3]) / 255.0
+                )
+            elif hasattr(trimesh_material, "baseColorFactor"):
                 color = trimesh_material.baseColorFactor
                 if isinstance(color, (np.ndarray, list)):
-                    # Check if colors are represented as 0-255 uint8 or 0.0-1.0 float
-                    if np.issubdtype(np.array(color).dtype, np.integer):
-                        self.base_color = glm.vec4(
-                            float(color[0]) / 255.0,
-                            float(color[1]) / 255.0,
-                            float(color[2]) / 255.0,
-                            float(color[3]) / 255.0 if len(color) > 3 else 1.0
-                        )
-                    else:
-                        self.base_color = glm.vec4(
-                            color[0],
-                            color[1],
-                            color[2],
-                            color[3] if len(color) > 3 else 1.0
-                        )
+                    self.base_color = glm.vec4(
+                        color[0],
+                        color[1],
+                        color[2],
+                        color[3] if len(color) > 3 else 1.0
+                    )
                         
             # 2. Dynamic in-memory Texture Loading
             img = None

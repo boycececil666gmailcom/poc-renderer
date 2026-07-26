@@ -17,6 +17,12 @@ class Window:
         # Bind the OpenGL context
         glfw.make_context_current(self.handle)
         
+        # Log GPU details to console
+        from OpenGL.GL import glGetString, GL_RENDERER, GL_VENDOR, GL_VERSION
+        print(f"OpenGL Vendor: {glGetString(GL_VENDOR).decode('utf-8')}")
+        print(f"OpenGL Renderer: {glGetString(GL_RENDERER).decode('utf-8')}")
+        print(f"OpenGL Version: {glGetString(GL_VERSION).decode('utf-8')}")
+        
         # Register resizing event callback
         glfw.set_framebuffer_size_callback(self.handle, self._framebuffer_size_callback)
         
