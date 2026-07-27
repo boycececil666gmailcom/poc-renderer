@@ -101,8 +101,20 @@ class Mesh:
             self.primitives.append(MeshPrimitive(geom))
             
     def draw(self, shader):
+        # 1. Render opaque primitives first with depth writing enabled
+        glDepthMask(GL_TRUE)
         for primitive in self.primitives:
-            primitive.draw(shader)
+            if not getattr(primitive.material, "is_transparent", False):
+                primitive.draw(shader)
+                
+        # 2. Render transparent primitives second with depth writing disabled for clean alpha blending
+        glDepthMask(GL_FALSE)
+        for primitive in self.primitives:
+            if getattr(primitive.material, "is_transparent", False):
+                primitive.draw(shader)
+                
+        # Restore normal depth writing state
+        glDepthMask(GL_TRUE)
             
     def delete(self):
         for primitive in self.primitives:

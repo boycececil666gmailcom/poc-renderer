@@ -13,10 +13,24 @@ class Material:
             if hasattr(trimesh_material, "baseColorFactor") and trimesh_material.baseColorFactor is not None:
                 color = trimesh_material.baseColorFactor
                 if isinstance(color, (np.ndarray, list)):
+                    # Normalize uint8 color values [0..255] to float [0.0..1.0] if needed
+                    c = [float(x) / 255.0 if any(v > 1.0 for v in color) else float(x) for x in color]
                     self.base_color = glm.vec4(
-                        color[0], color[1], color[2],
-                        color[3] if len(color) > 3 else 1.0
+                        c[0], c[1], c[2],
+                        c[3] if len(c) > 3 else 1.0
                     )
+            elif hasattr(trimesh_material, "main_color") and trimesh_material.main_color is not None:
+                color = trimesh_material.main_color
+                if isinstance(color, (np.ndarray, list)):
+                    c = [float(x) / 255.0 if any(v > 1.0 for v in color) else float(x) for x in color]
+                    self.base_color = glm.vec4(
+                        c[0], c[1], c[2],
+                        c[3] if len(c) > 3 else 1.0
+                    )
+
+            # Store alphaMode for transparent sorting
+            self.alpha_mode = str(getattr(trimesh_material, "alphaMode", "OPAQUE") or "OPAQUE")
+            self.is_transparent = (self.base_color.a < 0.99) or (self.alpha_mode == "BLEND")
                 
             # 2. glTF PBR Metallic & Roughness Factors
             self.metallic = float(getattr(trimesh_material, "metallicFactor", 0.0) or 0.0)
