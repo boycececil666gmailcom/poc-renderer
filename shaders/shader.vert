@@ -14,6 +14,5 @@ void main()
 {
     gl_Position = projection * view * model * vec4(aPos, 1.0);
     Normal = mat3(transpose(inverse(model))) * aNormal;
-    // Flip V/Y coordinate to align glTF texture origin (top-left) with OpenGL (bottom-left)
-    TexCoords = vec2(aTexCoords.x, 1.0 - aTexCoords.y);
+    TexCoords = aTexCoords;
 }

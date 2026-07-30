@@ -2,26 +2,31 @@
 import sys
 import os
 import time
+from pygltflib import GLTF2
 
-from engine import Config, Window, Shader, Mesh, Camera, Renderer
-
-DEFAULT_MODEL_PATH = os.path.join("gltf", "toyota_supra.gltf")
+from engine import Config, Window, Shader, Camera, Renderer
 
 def main():
-    # 1. Load configuration and initialize context
-    config = Config()
-    window = Window(config.scr_width, config.scr_height, "Antigravity OpenGL Engine (Modular)")
-    renderer = Renderer(window, config)
+    # 1. Require 3D model glTF file path argument
+    if len(sys.argv) < 2:
+        print("Usage: python main.py <path_to_gltf_file>")
+        sys.exit(1)
 
-    # 2. Select 3D model path (Migrated to GLTF by default)
-    model_path = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_MODEL_PATH
+    model_path = sys.argv[1]
     if not os.path.exists(model_path):
         print(f"Error: Model file '{model_path}' not found.")
         sys.exit(1)
 
-    # 3. Load graphics resources and camera
+    # 2. Load configuration and initialize context
+    config = Config()
+    window = Window(config.scr_width, config.scr_height, "Antigravity OpenGL Engine (Modular)")
+    renderer = Renderer(window, config)
+
+    # 3. Load native glTF 2.0 file, shaders, and camera
     shader = Shader("shaders/shader.vert", "shaders/shader.frag")
-    mesh = Mesh(model_path)
+    gltf = GLTF2.load(model_path)
+    base_dir = os.path.dirname(model_path)
+
     camera = Camera(
         pos=config.cam_pos,
         target=config.cam_target,
@@ -30,7 +35,7 @@ def main():
         far=config.cam_far
     )
 
-    print(f"Loaded Model: {model_path}")
+    print(f"Loaded Native glTF 2.0: {model_path}")
     print(f"Target Frame Rate: {config.target_fps} FPS")
 
     # 4. Main Rendering Loop
@@ -39,11 +44,11 @@ def main():
             frame_start = time.time()
 
             window.process_input()
-            renderer.render_frame(shader, mesh, camera)
+            renderer.render_frame(shader, gltf, camera, base_dir)
             renderer.limit_frame_rate(frame_start)
     finally:
         # 5. Clean up allocated graphics card buffers
-        mesh.delete()
+        renderer.clean_cache(gltf)
         shader.delete()
         window.terminate()
 
